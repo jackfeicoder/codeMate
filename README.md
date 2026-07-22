@@ -35,8 +35,6 @@ Current implementation:
 - Maven project skeleton
 - Core package layout
 - Minimal CLI entry point
-- Agent conversation loop with system prompt loading
-- Streaming assistant responses through Renderer
 - Interactive CLI loop
 - Slash command parser for `/help`, `/clear`, `/exit`, and `/quit`
 - Renderer abstraction with plain terminal output
@@ -46,7 +44,6 @@ Current implementation:
 - OpenAI-compatible chat completion client
 - SSE streaming chat completion client
 - Unit tests for configuration loading
-- Unit tests for Agent history, reset, and error handling
 - Unit tests for CLI command parsing and session reset behavior
 - Unit tests for plain renderer output
 - Unit tests for LLM request building, response parsing, and SSE delta parsing
@@ -100,7 +97,7 @@ codeMate/
 User input
   -> CliApplication reads input
   -> CliCommandParser routes slash commands or normal tasks
-  -> Agent appends user input to conversation history
+  -> Agent builds prompt, history, and project context
   -> LLM client streams messages and tool specifications
   -> Model returns SSE content deltas or tool calls
   -> Tool Registry dispatches requested tools
