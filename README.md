@@ -128,6 +128,8 @@ codeMate 支持保存多个本地模型档案，并在运行时切换：
 
 `/model init` 会在 `.codemate/models.properties` 创建配置模板。该文件已被 Git 忽略，真实 API Key 只应填写在该本地文件或 `.env` 中。模型切换后会重建 LLM Client，并清空当前会话上下文。
 
+终端输入使用 JLine 补全。输入 `/m` 后按 `Tab` 会列出匹配的 slash 命令；输入 `/model d` 后按 `Tab` 会按前缀展示模型档案，例如 `deepseek`。候选项可以通过 `Tab` 或方向键选择并确认。
+
 ## Roadmap
 
 第一个月目标见 [docs/development-plan.md](docs/development-plan.md)。

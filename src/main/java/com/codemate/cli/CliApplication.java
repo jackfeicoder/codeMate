@@ -5,6 +5,9 @@ import com.codemate.config.AppConfig;
 import com.codemate.config.ModelProfileStore;
 import com.codemate.llm.LlmClientFactory;
 import com.codemate.render.Renderer;
+import org.jline.reader.EndOfFileException;
+import org.jline.reader.LineReader;
+import org.jline.reader.UserInterruptException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,8 +44,7 @@ public class CliApplication {
     }
 
     public void run(InputStream input) {
-        renderer.startup(config);
-        renderer.helpHint();
+        showStartup();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
             while (true) {
@@ -61,6 +63,25 @@ public class CliApplication {
             }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read CLI input", e);
+        }
+    }
+
+    public void run(LineReader lineReader) {
+        showStartup();
+
+        while (true) {
+            try {
+                String line = lineReader.readLine("> ");
+                if (!handleLine(line)) {
+                    return;
+                }
+            } catch (UserInterruptException e) {
+                renderer.stream().println();
+            } catch (EndOfFileException e) {
+                renderer.stream().println();
+                renderer.goodbye();
+                return;
+            }
         }
     }
 
@@ -132,6 +153,11 @@ public class CliApplication {
 
     int submittedInputCount() {
         return submittedInputs.size();
+    }
+
+    private void showStartup() {
+        renderer.startup(config);
+        renderer.helpHint();
     }
 
     private boolean handleNormalInput(String input) {
