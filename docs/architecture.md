@@ -148,6 +148,8 @@ public interface LlmClient {
 - `.env` 读取
 - provider/model/baseUrl/apiKey
 - 本地配置文件
+- API Key 脱敏展示
+- 默认值和非法数字回退
 
 面试重点：
 

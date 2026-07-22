@@ -34,20 +34,34 @@ codeMate 不是简单的“调用大模型 API 聊天工具”，而是一个面
 
 ## 当前状态
 
-当前是 Day 1 骨架阶段：
+当前是 Day 2 配置系统阶段：
 
 - Maven 项目已创建
 - 基础包结构已创建
 - README 和学习文档已创建
 - 最小 `Main` 入口已创建
+- 可读取 `.env` / 系统环境变量中的模型配置
+- 启动时展示 provider、model、项目上下文和脱敏 API Key
 
 运行：
 
 ```bash
+copy .env.example .env
 mvn test
 mvn package
 java -jar target/codemate-0.1.0-SNAPSHOT.jar
 ```
+
+配置项：
+
+| 变量 | 作用 | 默认值 |
+| --- | --- | --- |
+| `CODEMATE_PROVIDER` | 当前模型供应商 | `deepseek` |
+| `CODEMATE_MODEL` | 当前模型名 | `deepseek-chat` |
+| `CODEMATE_BASE_URL` | OpenAI-compatible API Base URL | `https://api.deepseek.com/v1` |
+| `CODEMATE_API_KEY` | 模型 API Key，不会打印明文 | 空 |
+| `CODEMATE_PROJECT_CONTEXT` | 项目上下文文件 | `CODEMATE.md` |
+| `CODEMATE_MAX_AGENT_STEPS` | Agent 最大循环步数 | `8` |
 
 ## 目录结构
 

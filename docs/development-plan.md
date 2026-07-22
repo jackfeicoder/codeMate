@@ -22,7 +22,7 @@ git push gitee main
 | Day | 目标 | 产出 |
 | --- | --- | --- |
 | 1 | 项目初始化 | Maven 骨架、README、docs、最小 Main |
-| 2 | 配置系统 | `.env` 读取、`AppConfig`、Provider 配置 |
+| 2 | 配置系统 | `.env` 读取、`AppConfig`、Provider 配置，已完成 |
 | 3 | LLM 抽象 | `LlmClient`、Message、OpenAI-compatible Client |
 | 4 | CLI 主循环 | `/help`、`/exit`、`/clear`、history |
 | 5 | 流式输出 | SSE 解析、Renderer.stream、错误处理 |
