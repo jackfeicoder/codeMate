@@ -35,12 +35,24 @@ Current implementation:
 - Maven project skeleton
 - Core package layout
 - Minimal CLI entry point
+- Interactive CLI loop
+- Slash command parser for `/help`, `/clear`, `/exit`, and `/quit`
 - Environment-based runtime configuration
 - Masked credential display
 - LLM client abstraction
 - OpenAI-compatible chat completion client
 - Unit tests for configuration loading
+- Unit tests for CLI command parsing and session reset behavior
 - Unit tests for LLM request building and response parsing
+
+## Commands
+
+| Command | Behavior |
+| --- | --- |
+| `/help` | Show available commands |
+| `/clear` | Clear current session state |
+| `/exit` | Exit codeMate |
+| `/quit` | Exit codeMate |
 
 ## Quick Start
 
@@ -80,7 +92,8 @@ codeMate/
 
 ```text
 User input
-  -> CLI routes slash commands or normal tasks
+  -> CliApplication reads input
+  -> CliCommandParser routes slash commands or normal tasks
   -> Agent builds prompt, history, and project context
   -> LLM client sends messages and tool specifications
   -> Model returns content or tool calls

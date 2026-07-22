@@ -10,7 +10,8 @@ codeMate is a terminal AI Agent CLI. The CLI receives user input, the Agent call
 
 ```text
 Main
-  -> CommandParser
+  -> CliApplication
+  -> CliCommandParser
     -> slash command handler
     -> Agent.run(userInput)
       -> PromptBuilder
@@ -31,11 +32,18 @@ Main
 Responsibilities:
 
 - Program entry
-- User input
+- Interactive input loop
 - Slash command routing
 - Agent, Tool Registry, Renderer, and configuration wiring
 
 The CLI layer should orchestrate components without owning large business logic.
+
+Current implementation:
+
+- `Main`: loads runtime configuration and starts `CliApplication`
+- `CliApplication`: owns the command loop and current session state
+- `CliCommandParser`: classifies slash commands and normal tasks
+- `CommandType` and `ParsedCommand`: command parsing result model
 
 ### agent
 

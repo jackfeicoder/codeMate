@@ -40,6 +40,7 @@ Delivered so far:
 - Step 1: project skeleton, package layout, docs, minimal CLI
 - Step 2: environment configuration and masked credential display
 - Step 3: `LlmClient`, `LlmMessage`, `LlmResponse`, `LlmClientFactory`, and OpenAI-compatible chat completion client
+- Step 4: `CliApplication`, `CliCommandParser`, basic command loop, `/help`, `/clear`, `/exit`, and `/quit`
 
 ## Phase 2: Tool System and Policy
 
