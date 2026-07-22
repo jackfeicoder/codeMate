@@ -42,10 +42,11 @@ Current implementation:
 - Masked credential display
 - LLM client abstraction
 - OpenAI-compatible chat completion client
+- SSE streaming chat completion client
 - Unit tests for configuration loading
 - Unit tests for CLI command parsing and session reset behavior
 - Unit tests for plain renderer output
-- Unit tests for LLM request building and response parsing
+- Unit tests for LLM request building, response parsing, and SSE delta parsing
 
 ## Commands
 
@@ -97,8 +98,8 @@ User input
   -> CliApplication reads input
   -> CliCommandParser routes slash commands or normal tasks
   -> Agent builds prompt, history, and project context
-  -> LLM client sends messages and tool specifications
-  -> Model returns content or tool calls
+  -> LLM client streams messages and tool specifications
+  -> Model returns SSE content deltas or tool calls
   -> Tool Registry dispatches requested tools
   -> Policy layer checks paths, commands, approval, and audit
   -> Tool results are appended to the conversation

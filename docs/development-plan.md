@@ -42,6 +42,7 @@ Delivered so far:
 - Step 3: `LlmClient`, `LlmMessage`, `LlmResponse`, `LlmClientFactory`, and OpenAI-compatible chat completion client
 - Step 4: `CliApplication`, `CliCommandParser`, basic command loop, `/help`, `/clear`, `/exit`, and `/quit`
 - Step 5: `Renderer` abstraction and `PlainRenderer` terminal output
+- Step 6: SSE streaming support in `LlmClient`, `OpenAiCompatibleClient`, and `Renderer`
 
 ## Phase 2: Tool System and Policy
 

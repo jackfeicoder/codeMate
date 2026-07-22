@@ -4,4 +4,6 @@ import java.util.List;
 
 public interface LlmClient {
     LlmResponse complete(List<LlmMessage> messages);
+
+    LlmResponse stream(List<LlmMessage> messages, StreamListener listener);
 }

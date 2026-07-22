@@ -10,6 +10,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okio.BufferedSource;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -54,13 +55,22 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     @Override
     public LlmResponse complete(List<LlmMessage> messages) {
+        return execute(messages, false, StreamListener.NO_OP);
+    }
+
+    @Override
+    public LlmResponse stream(List<LlmMessage> messages, StreamListener listener) {
+        return execute(messages, true, listener == null ? StreamListener.NO_OP : listener);
+    }
+
+    private LlmResponse execute(List<LlmMessage> messages, boolean stream, StreamListener listener) {
         if (apiKey.isBlank()) {
             throw new LlmException("Missing CODEMATE_API_KEY");
         }
 
         String requestJson;
         try {
-            requestJson = objectMapper.writeValueAsString(buildRequest(messages));
+            requestJson = objectMapper.writeValueAsString(buildRequest(messages, stream));
         } catch (IOException e) {
             throw new LlmException("Failed to serialize LLM request", e);
         }
@@ -74,10 +84,17 @@ public class OpenAiCompatibleClient implements LlmClient {
 
         try (Response response = httpClient.newCall(request).execute()) {
             ResponseBody body = response.body();
-            String responseText = body == null ? "" : body.string();
             if (!response.isSuccessful()) {
+                String responseText = body == null ? "" : body.string();
                 throw new LlmException("LLM request failed with HTTP " + response.code() + ": " + responseText);
             }
+            if (body == null) {
+                throw new LlmException("LLM response body was empty");
+            }
+            if (stream) {
+                return parseStream(body.source(), listener);
+            }
+            String responseText = body.string();
             return new LlmResponse(parseContent(responseText));
         } catch (IOException e) {
             throw new LlmException("LLM request failed", e);
@@ -85,13 +102,17 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     ObjectNode buildRequest(List<LlmMessage> messages) {
+        return buildRequest(messages, false);
+    }
+
+    ObjectNode buildRequest(List<LlmMessage> messages, boolean stream) {
         if (messages == null || messages.isEmpty()) {
             throw new IllegalArgumentException("messages must not be empty");
         }
 
         ObjectNode root = objectMapper.createObjectNode();
         root.put("model", model);
-        root.put("stream", false);
+        root.put("stream", stream);
 
         ArrayNode messageNodes = root.putArray("messages");
         for (LlmMessage message : messages) {
@@ -101,6 +122,57 @@ public class OpenAiCompatibleClient implements LlmClient {
         }
 
         return root;
+    }
+
+    LlmResponse parseStream(BufferedSource source, StreamListener listener) {
+        StreamListener streamListener = listener == null ? StreamListener.NO_OP : listener;
+        StringBuilder content = new StringBuilder();
+        int inputTokens = 0;
+        int outputTokens = 0;
+
+        try {
+            while (!source.exhausted()) {
+                String line = source.readUtf8Line();
+                if (line == null) {
+                    break;
+                }
+
+                String trimmed = line.trim();
+                if (trimmed.isEmpty() || !trimmed.startsWith("data:")) {
+                    continue;
+                }
+
+                String payload = trimmed.substring("data:".length()).trim();
+                if (payload.isEmpty()) {
+                    continue;
+                }
+                if ("[DONE]".equals(payload)) {
+                    break;
+                }
+
+                JsonNode root = objectMapper.readTree(payload);
+                JsonNode error = root.path("error");
+                if (!error.isMissingNode() && !error.isNull()) {
+                    throw new LlmException("LLM stream returned error: " + error);
+                }
+
+                JsonNode usage = root.path("usage");
+                if (!usage.isMissingNode()) {
+                    inputTokens = usage.path("prompt_tokens").asInt(inputTokens);
+                    outputTokens = usage.path("completion_tokens").asInt(outputTokens);
+                }
+
+                String delta = root.path("choices").path(0).path("delta").path("content").asText("");
+                if (!delta.isEmpty()) {
+                    content.append(delta);
+                    streamListener.onContentDelta(delta);
+                }
+            }
+        } catch (IOException e) {
+            throw new LlmException("Failed to parse LLM stream", e);
+        }
+
+        return new LlmResponse(content.toString(), inputTokens, outputTokens);
     }
 
     String parseContent(String responseText) {

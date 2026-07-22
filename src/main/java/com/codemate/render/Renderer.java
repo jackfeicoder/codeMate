@@ -21,6 +21,10 @@ public interface Renderer {
 
     void agentNotReady(String input);
 
+    void assistantDelta(String delta);
+
+    void assistantDone();
+
     void error(String message);
 
     PrintStream stream();

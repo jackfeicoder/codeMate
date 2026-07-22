@@ -16,7 +16,7 @@ Main
     -> slash command handler
     -> Agent.run(userInput)
       -> PromptBuilder
-      -> LlmClient.complete(messages)
+      -> LlmClient.stream(messages, listener)
       -> ToolRegistry.execute(toolCall)
         -> Policy checks
         -> Concrete tool
@@ -78,14 +78,16 @@ Current interface:
 ```java
 public interface LlmClient {
     LlmResponse complete(List<LlmMessage> messages);
+    LlmResponse stream(List<LlmMessage> messages, StreamListener listener);
 }
 ```
 
 Current implementation:
 
 - `LlmMessage`: role and content pair
-- `LlmResponse`: assistant content wrapper
-- `OpenAiCompatibleClient`: non-streaming `/chat/completions` client
+- `LlmResponse`: assistant content and token usage wrapper
+- `StreamListener`: receives assistant content deltas
+- `OpenAiCompatibleClient`: non-streaming and SSE `/chat/completions` client
 - `LlmClientFactory`: creates a configured client from `AppConfig`
 
 ### tool
@@ -131,6 +133,7 @@ Current implementation:
 
 - `Renderer`: output boundary used by CLI and future Agent components
 - `PlainRenderer`: simple PrintStream-backed terminal renderer
+- `assistantDelta`: renders streaming assistant content fragments
 
 Initial display style:
 
@@ -160,6 +163,8 @@ LlmMessage
 
 LlmResponse
   content
+  inputTokens
+  outputTokens
 
 ToolSpec
   name

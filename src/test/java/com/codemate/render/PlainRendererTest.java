@@ -36,4 +36,16 @@ class PlainRendererTest {
         assertTrue(output.contains("/exit"));
         assertTrue(output.contains("/quit"));
     }
+
+    @Test
+    void assistantDeltaStreamsWithoutExtraFormatting() {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        PlainRenderer renderer = new PlainRenderer(new PrintStream(bytes, true, StandardCharsets.UTF_8));
+
+        renderer.assistantDelta("Hello");
+        renderer.assistantDelta(" world");
+        renderer.assistantDone();
+
+        assertTrue(bytes.toString(StandardCharsets.UTF_8).contains("Hello world"));
+    }
 }

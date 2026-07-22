@@ -65,6 +65,17 @@ public class PlainRenderer implements Renderer {
     }
 
     @Override
+    public void assistantDelta(String delta) {
+        output.print(delta);
+        output.flush();
+    }
+
+    @Override
+    public void assistantDone() {
+        output.println();
+    }
+
+    @Override
     public void error(String message) {
         output.println("Error: " + message);
     }
