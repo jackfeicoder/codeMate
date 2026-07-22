@@ -64,6 +64,13 @@ LLM response:
   tool_calls -> execute tools and continue
 ```
 
+Current implementation:
+
+- `Agent`: owns conversation history and calls `LlmClient.stream`
+- `PromptLoader`: loads `prompts/react-system.md` from resources
+- `/clear`: resets conversation history back to the system prompt
+- LLM errors are rendered through `Renderer.error`
+
 ### llm
 
 Responsibilities:
@@ -160,6 +167,11 @@ Sensitive runtime values must remain outside Git.
 LlmMessage
   role: system | user | assistant | tool
   content
+
+ConversationHistory
+  system prompt
+  user messages
+  assistant messages
 
 LlmResponse
   content

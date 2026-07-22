@@ -1,5 +1,6 @@
 package com.codemate.cli;
 
+import com.codemate.agent.Agent;
 import com.codemate.config.AppConfig;
 import com.codemate.render.Renderer;
 
@@ -14,11 +15,13 @@ import java.util.List;
 public class CliApplication {
     private final AppConfig config;
     private final Renderer renderer;
+    private final Agent agent;
     private final List<String> submittedInputs = new ArrayList<>();
 
-    public CliApplication(AppConfig config, Renderer renderer) {
+    public CliApplication(AppConfig config, Renderer renderer, Agent agent) {
         this.config = config;
         this.renderer = renderer;
+        this.agent = agent;
     }
 
     public void run(InputStream input) {
@@ -55,6 +58,7 @@ public class CliApplication {
             }
             case CLEAR -> {
                 submittedInputs.clear();
+                agent.reset();
                 renderer.sessionCleared();
                 yield true;
             }
@@ -80,7 +84,7 @@ public class CliApplication {
         }
 
         submittedInputs.add(trimmed);
-        renderer.agentNotReady(trimmed);
+        agent.run(trimmed);
         return true;
     }
 }

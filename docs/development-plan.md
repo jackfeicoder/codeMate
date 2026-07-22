@@ -43,6 +43,7 @@ Delivered so far:
 - Step 4: `CliApplication`, `CliCommandParser`, basic command loop, `/help`, `/clear`, `/exit`, and `/quit`
 - Step 5: `Renderer` abstraction and `PlainRenderer` terminal output
 - Step 6: SSE streaming support in `LlmClient`, `OpenAiCompatibleClient`, and `Renderer`
+- Step 7: `Agent`, `PromptLoader`, conversation history, streamed assistant output, and `/clear` history reset
 
 ## Phase 2: Tool System and Policy
 
