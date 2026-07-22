@@ -59,6 +59,16 @@ class CliApplicationTest {
         assertTrue(testCli.output().contains("Unknown command: /unknown"));
     }
 
+    @Test
+    void modelCommandShowsCurrentProfile() {
+        TestCli testCli = newTestCli();
+
+        boolean shouldContinue = testCli.app().handleLine("/model");
+
+        assertTrue(shouldContinue);
+        assertTrue(testCli.output().contains("Active model profile: default"));
+    }
+
     private static TestCli newTestCli() {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream output = new PrintStream(bytes, true, StandardCharsets.UTF_8);

@@ -18,6 +18,14 @@ public final class CliCommandParser {
             return new ParsedCommand(CommandType.HELP, "");
         }
 
+        if (trimmed.equalsIgnoreCase("/model")) {
+            return new ParsedCommand(CommandType.MODEL, "");
+        }
+
+        if (trimmed.regionMatches(true, 0, "/model ", 0, 7)) {
+            return new ParsedCommand(CommandType.MODEL, trimmed.substring(7).trim());
+        }
+
         if (equalsAny(trimmed, "/clear", "clear")) {
             return new ParsedCommand(CommandType.CLEAR, "");
         }

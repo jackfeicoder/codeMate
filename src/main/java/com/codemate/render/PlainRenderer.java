@@ -1,8 +1,10 @@
 package com.codemate.render;
 
 import com.codemate.config.AppConfig;
+import com.codemate.config.ModelProfile;
 
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Objects;
 
 public class PlainRenderer implements Renderer {
@@ -31,9 +33,43 @@ public class PlainRenderer implements Renderer {
     public void help() {
         output.println("Available commands:");
         output.println("  /help   Show commands");
+        output.println("  /model  Show the active model profile");
+        output.println("  /model list  List available model profiles");
+        output.println("  /model use <name>  Switch model profile");
+        output.println("  /model init  Create a local model profile template");
         output.println("  /clear  Clear current session state");
         output.println("  /exit   Exit codeMate");
         output.println("  /quit   Exit codeMate");
+    }
+
+    @Override
+    public void modelStatus(String activeProfile, AppConfig config) {
+        output.println("Active model profile: " + activeProfile);
+        output.println("Provider: " + config.provider());
+        output.println("Model: " + config.model());
+        output.println("Base URL: " + config.baseUrl());
+    }
+
+    @Override
+    public void modelProfiles(String activeProfile, List<ModelProfile> profiles) {
+        output.println("Model profiles:");
+        for (ModelProfile profile : profiles) {
+            String marker = profile.name().equals(activeProfile) ? "*" : " ";
+            output.println(marker + " " + profile.name() + "  " + profile.config().provider()
+                    + " / " + profile.config().model());
+        }
+    }
+
+    @Override
+    public void modelSwitched(String profileName, AppConfig config) {
+        output.println("Switched to model profile: " + profileName + " (" + config.model() + ").");
+        output.println("Session state cleared for the new model.");
+    }
+
+    @Override
+    public void modelConfigPath(java.nio.file.Path path) {
+        output.println("Model profile template created: " + path);
+        output.println("Fill in profile API keys locally, then use /model list and /model use <name>.");
     }
 
     @Override

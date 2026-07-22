@@ -1,6 +1,10 @@
 package com.codemate.render;
 
 import com.codemate.config.AppConfig;
+import com.codemate.config.ModelProfile;
+
+import java.nio.file.Path;
+import java.util.List;
 
 import java.io.PrintStream;
 
@@ -10,6 +14,14 @@ public interface Renderer {
     void helpHint();
 
     void help();
+
+    void modelStatus(String activeProfile, AppConfig config);
+
+    void modelProfiles(String activeProfile, List<ModelProfile> profiles);
+
+    void modelSwitched(String profileName, AppConfig config);
+
+    void modelConfigPath(Path path);
 
     void prompt();
 

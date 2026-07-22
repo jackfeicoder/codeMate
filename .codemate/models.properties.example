@@ -1,0 +1,13 @@
+# Copy this file to .codemate/models.properties. It is local-only and ignored by Git.
+active=deepseek
+
+profile.deepseek.provider=deepseek
+profile.deepseek.model=deepseek-v4-flash
+profile.deepseek.base-url=https://api.deepseek.com
+# Reuses CODEMATE_API_KEY from .env for the default profile.
+profile.deepseek.api-key=${CODEMATE_API_KEY}
+
+profile.ccswitch.provider=ccswitch
+profile.ccswitch.model=grok-4.5
+profile.ccswitch.base-url=http://127.0.0.1:3000/v1
+profile.ccswitch.api-key=your-ccswitch-key

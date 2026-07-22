@@ -6,6 +6,7 @@ target/
 *.class
 *.jar
 *.iml
-/.codemate/
+/.codemate/*
+!/.codemate/models.properties.example
 docs/private-notes.md
 docs/local-notes.md

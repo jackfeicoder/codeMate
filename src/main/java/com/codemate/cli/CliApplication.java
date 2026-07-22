@@ -2,6 +2,8 @@ package com.codemate.cli;
 
 import com.codemate.agent.Agent;
 import com.codemate.config.AppConfig;
+import com.codemate.config.ModelProfileStore;
+import com.codemate.llm.LlmClientFactory;
 import com.codemate.render.Renderer;
 
 import java.io.BufferedReader;
@@ -13,15 +15,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CliApplication {
-    private final AppConfig config;
+    private AppConfig config;
     private final Renderer renderer;
-    private final Agent agent;
+    private Agent agent;
+    private final ModelProfileStore modelProfiles;
+    private final String systemPrompt;
     private final List<String> submittedInputs = new ArrayList<>();
 
     public CliApplication(AppConfig config, Renderer renderer, Agent agent) {
+        this(config, renderer, agent, ModelProfileStore.inMemory(config), "You are codeMate.");
+    }
+
+    public CliApplication(
+            AppConfig config,
+            Renderer renderer,
+            Agent agent,
+            ModelProfileStore modelProfiles,
+            String systemPrompt
+    ) {
         this.config = config;
         this.renderer = renderer;
         this.agent = agent;
+        this.modelProfiles = modelProfiles;
+        this.systemPrompt = systemPrompt;
     }
 
     public void run(InputStream input) {
@@ -56,6 +72,10 @@ public class CliApplication {
                 renderer.help();
                 yield true;
             }
+            case MODEL -> {
+                handleModel(command.payload());
+                yield true;
+            }
             case CLEAR -> {
                 submittedInputs.clear();
                 agent.reset();
@@ -71,6 +91,43 @@ public class CliApplication {
                 yield true;
             }
         };
+    }
+
+    private void handleModel(String payload) {
+        String argument = payload == null ? "" : payload.trim();
+        if (argument.isEmpty()) {
+            renderer.modelStatus(modelProfiles.activeProfileName(), config);
+            return;
+        }
+        if (argument.equalsIgnoreCase("list")) {
+            renderer.modelProfiles(modelProfiles.activeProfileName(), modelProfiles.profiles());
+            return;
+        }
+        if (argument.equalsIgnoreCase("init")) {
+            try {
+                renderer.modelConfigPath(modelProfiles.initializeTemplate());
+            } catch (IllegalStateException e) {
+                renderer.error(e.getMessage());
+            }
+            return;
+        }
+
+        String profileName = argument.regionMatches(true, 0, "use ", 0, 4)
+                ? argument.substring(4).trim()
+                : argument;
+        if (profileName.isEmpty()) {
+            renderer.error("Usage: /model use <name>");
+            return;
+        }
+
+        try {
+            config = modelProfiles.activate(profileName);
+            agent = new Agent(LlmClientFactory.create(config), renderer, systemPrompt);
+            submittedInputs.clear();
+            renderer.modelSwitched(modelProfiles.activeProfileName(), config);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            renderer.error(e.getMessage());
+        }
     }
 
     int submittedInputCount() {

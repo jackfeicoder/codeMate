@@ -33,11 +33,20 @@ class CliCommandParserTest {
     }
 
     @Test
+    void parsesModelCommandAndPayload() {
+        ParsedCommand command = CliCommandParser.parse("/model use deepseek");
+
+        assertEquals(CommandType.MODEL, command.type());
+        assertEquals("use deepseek", command.payload());
+        assertEquals(CommandType.MODEL, CliCommandParser.parse("/model").type());
+    }
+
+    @Test
     void slashCommandUnknownWhenNotRegistered() {
-        ParsedCommand command = CliCommandParser.parse("/model deepseek");
+        ParsedCommand command = CliCommandParser.parse("/unknown");
 
         assertEquals(CommandType.UNKNOWN, command.type());
-        assertEquals("/model deepseek", command.payload());
+        assertEquals("/unknown", command.payload());
     }
 
     @Test

@@ -115,6 +115,19 @@ codeMate/
 - GitHub: https://github.com/jackfeicoder/codeMate
 - Gitee: https://gitee.com/jackfei2545/codeMate.git
 
+## 模型档案
+
+codeMate 支持保存多个本地模型档案，并在运行时切换：
+
+```text
+/model                 # 查看当前档案
+/model list            # 列出档案
+/model use ccswitch    # 切换到指定档案
+/model init            # 生成本地档案模板
+```
+
+`/model init` 会在 `.codemate/models.properties` 创建配置模板。该文件已被 Git 忽略，真实 API Key 只应填写在该本地文件或 `.env` 中。模型切换后会重建 LLM Client，并清空当前会话上下文。
+
 ## Roadmap
 
 第一个月目标见 [docs/development-plan.md](docs/development-plan.md)。
