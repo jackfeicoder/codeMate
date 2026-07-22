@@ -37,12 +37,14 @@ Current implementation:
 - Minimal CLI entry point
 - Interactive CLI loop
 - Slash command parser for `/help`, `/clear`, `/exit`, and `/quit`
+- Renderer abstraction with plain terminal output
 - Environment-based runtime configuration
 - Masked credential display
 - LLM client abstraction
 - OpenAI-compatible chat completion client
 - Unit tests for configuration loading
 - Unit tests for CLI command parsing and session reset behavior
+- Unit tests for plain renderer output
 - Unit tests for LLM request building and response parsing
 
 ## Commands

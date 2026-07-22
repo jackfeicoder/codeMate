@@ -1,6 +1,7 @@
 package com.codemate.cli;
 
 import com.codemate.config.AppConfig;
+import com.codemate.render.PlainRenderer;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -12,47 +13,59 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CliApplicationTest {
-    private final CliApplication app = new CliApplication(
-            new AppConfig("deepseek", "deepseek-chat", "https://example.com", "", "CODEMATE.md", 8)
-    );
-
     @Test
     void normalInputIsRecordedUntilAgentIsWired() {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        boolean shouldContinue = app.handleLine("summarize README", new PrintStream(bytes, true, StandardCharsets.UTF_8));
+        TestCli testCli = newTestCli();
+        boolean shouldContinue = testCli.app().handleLine("summarize README");
 
         assertTrue(shouldContinue);
-        assertEquals(1, app.submittedInputCount());
-        assertTrue(bytes.toString(StandardCharsets.UTF_8).contains("Agent runtime is not wired yet."));
+        assertEquals(1, testCli.app().submittedInputCount());
+        assertTrue(testCli.output().contains("Agent runtime is not wired yet."));
     }
 
     @Test
     void clearResetsSessionState() {
-        app.handleLine("first task", new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        TestCli testCli = newTestCli();
+        testCli.app().handleLine("first task");
 
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        boolean shouldContinue = app.handleLine("/clear", new PrintStream(bytes, true, StandardCharsets.UTF_8));
+        boolean shouldContinue = testCli.app().handleLine("/clear");
 
         assertTrue(shouldContinue);
-        assertEquals(0, app.submittedInputCount());
-        assertTrue(bytes.toString(StandardCharsets.UTF_8).contains("Session state cleared."));
+        assertEquals(0, testCli.app().submittedInputCount());
+        assertTrue(testCli.output().contains("Session state cleared."));
     }
 
     @Test
     void exitStopsLoop() {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        boolean shouldContinue = app.handleLine("/exit", new PrintStream(bytes, true, StandardCharsets.UTF_8));
+        TestCli testCli = newTestCli();
+        boolean shouldContinue = testCli.app().handleLine("/exit");
 
         assertFalse(shouldContinue);
-        assertTrue(bytes.toString(StandardCharsets.UTF_8).contains("Goodbye."));
+        assertTrue(testCli.output().contains("Goodbye."));
     }
 
     @Test
     void unknownCommandContinuesLoop() {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        boolean shouldContinue = app.handleLine("/unknown", new PrintStream(bytes, true, StandardCharsets.UTF_8));
+        TestCli testCli = newTestCli();
+        boolean shouldContinue = testCli.app().handleLine("/unknown");
 
         assertTrue(shouldContinue);
-        assertTrue(bytes.toString(StandardCharsets.UTF_8).contains("Unknown command: /unknown"));
+        assertTrue(testCli.output().contains("Unknown command: /unknown"));
+    }
+
+    private static TestCli newTestCli() {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        PrintStream output = new PrintStream(bytes, true, StandardCharsets.UTF_8);
+        CliApplication app = new CliApplication(
+                new AppConfig("deepseek", "deepseek-chat", "https://example.com", "", "CODEMATE.md", 8),
+                new PlainRenderer(output)
+        );
+        return new TestCli(app, bytes);
+    }
+
+    private record TestCli(CliApplication app, ByteArrayOutputStream bytes) {
+        String output() {
+            return bytes.toString(StandardCharsets.UTF_8);
+        }
     }
 }

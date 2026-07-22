@@ -1,41 +1,42 @@
 package com.codemate.cli;
 
 import com.codemate.config.AppConfig;
+import com.codemate.render.Renderer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CliApplication {
     private final AppConfig config;
+    private final Renderer renderer;
     private final List<String> submittedInputs = new ArrayList<>();
 
-    public CliApplication(AppConfig config) {
+    public CliApplication(AppConfig config, Renderer renderer) {
         this.config = config;
+        this.renderer = renderer;
     }
 
-    public void run(InputStream input, PrintStream output) {
-        printStartup(output);
-        printHelpHint(output);
+    public void run(InputStream input) {
+        renderer.startup(config);
+        renderer.helpHint();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
             while (true) {
-                output.print("> ");
-                output.flush();
+                renderer.prompt();
 
                 String line = reader.readLine();
                 if (line == null) {
-                    output.println();
-                    output.println("Goodbye.");
+                    renderer.stream().println();
+                    renderer.goodbye();
                     return;
                 }
 
-                if (!handleLine(line, output)) {
+                if (!handleLine(line)) {
                     return;
                 }
             }
@@ -44,26 +45,25 @@ public class CliApplication {
         }
     }
 
-    boolean handleLine(String input, PrintStream output) {
+    boolean handleLine(String input) {
         ParsedCommand command = CliCommandParser.parse(input);
         return switch (command.type()) {
-            case NONE -> handleNormalInput(input, output);
+            case NONE -> handleNormalInput(input);
             case HELP -> {
-                printHelp(output);
+                renderer.help();
                 yield true;
             }
             case CLEAR -> {
                 submittedInputs.clear();
-                output.println("Session state cleared.");
+                renderer.sessionCleared();
                 yield true;
             }
             case EXIT -> {
-                output.println("Goodbye.");
+                renderer.goodbye();
                 yield false;
             }
             case UNKNOWN -> {
-                output.println("Unknown command: " + command.payload());
-                output.println("Type /help to see available commands.");
+                renderer.unknownCommand(command.payload());
                 yield true;
             }
         };
@@ -73,36 +73,14 @@ public class CliApplication {
         return submittedInputs.size();
     }
 
-    private boolean handleNormalInput(String input, PrintStream output) {
+    private boolean handleNormalInput(String input) {
         String trimmed = input == null ? "" : input.trim();
         if (trimmed.isEmpty()) {
             return true;
         }
 
         submittedInputs.add(trimmed);
-        output.println("Agent runtime is not wired yet.");
-        output.println("Received: " + trimmed);
+        renderer.agentNotReady(trimmed);
         return true;
-    }
-
-    private void printStartup(PrintStream output) {
-        output.println("codeMate CLI");
-        output.println("Provider: " + config.provider());
-        output.println("Model: " + config.model());
-        output.println("API Key: " + config.maskedApiKey());
-        output.println("Project context: " + config.projectContext());
-        output.println("Max agent steps: " + config.maxAgentSteps());
-    }
-
-    private void printHelpHint(PrintStream output) {
-        output.println("Type /help for commands.");
-    }
-
-    private void printHelp(PrintStream output) {
-        output.println("Available commands:");
-        output.println("  /help   Show commands");
-        output.println("  /clear  Clear current session state");
-        output.println("  /exit   Exit codeMate");
-        output.println("  /quit   Exit codeMate");
     }
 }

@@ -10,6 +10,7 @@ codeMate is a terminal AI Agent CLI. The CLI receives user input, the Agent call
 
 ```text
 Main
+  -> PlainRenderer
   -> CliApplication
   -> CliCommandParser
     -> slash command handler
@@ -125,6 +126,11 @@ Responsibilities:
 - Streaming output
 - Tool-call display
 - Error display
+
+Current implementation:
+
+- `Renderer`: output boundary used by CLI and future Agent components
+- `PlainRenderer`: simple PrintStream-backed terminal renderer
 
 Initial display style:
 
