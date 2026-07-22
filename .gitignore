@@ -7,5 +7,5 @@ target/
 *.jar
 *.iml
 /.codemate/
-docs/interview-guide.md
-docs/learning-notes.md
+docs/private-notes.md
+docs/local-notes.md

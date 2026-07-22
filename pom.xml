@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>codeMate</name>
-    <description>A Java AI Agent CLI for learning agent engineering</description>
+    <description>A Java AI Agent CLI for software engineering workflows</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
