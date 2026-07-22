@@ -35,6 +35,12 @@ Agent reads README
 Agent returns a concise project summary
 ```
 
+Delivered so far:
+
+- Step 1: project skeleton, package layout, docs, minimal CLI
+- Step 2: environment configuration and masked credential display
+- Step 3: `LlmClient`, `LlmMessage`, `LlmResponse`, `LlmClientFactory`, and OpenAI-compatible chat completion client
+
 ## Phase 2: Tool System and Policy
 
 Goal: controlled file and command operations.

@@ -14,7 +14,7 @@ Main
     -> slash command handler
     -> Agent.run(userInput)
       -> PromptBuilder
-      -> LlmClient.chat(messages, tools)
+      -> LlmClient.complete(messages)
       -> ToolRegistry.execute(toolCall)
         -> Policy checks
         -> Concrete tool
@@ -61,18 +61,23 @@ Responsibilities:
 
 - Hide provider-specific API differences
 - Expose a stable `LlmClient`
-- Support OpenAI-compatible requests
-- Support streaming and tool calls
+- Support OpenAI-compatible chat completion requests
+- Parse model responses into project response objects
 
-Suggested interface:
+Current interface:
 
 ```java
 public interface LlmClient {
-    ChatResponse chat(ChatRequest request);
-    String provider();
-    String model();
+    LlmResponse complete(List<LlmMessage> messages);
 }
 ```
+
+Current implementation:
+
+- `LlmMessage`: role and content pair
+- `LlmResponse`: assistant content wrapper
+- `OpenAiCompatibleClient`: non-streaming `/chat/completions` client
+- `LlmClientFactory`: creates a configured client from `AppConfig`
 
 ### tool
 
@@ -116,7 +121,7 @@ Responsibilities:
 Initial display style:
 
 ```text
-◆ tool read_file
+tool read_file
   path: README.md
   status: done
 ```
@@ -135,11 +140,12 @@ Sensitive runtime values must remain outside Git.
 ## Data Structures
 
 ```text
-Message
+LlmMessage
   role: system | user | assistant | tool
   content
-  toolCalls
-  toolCallRef
+
+LlmResponse
+  content
 
 ToolSpec
   name

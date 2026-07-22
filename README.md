@@ -37,7 +37,10 @@ Current implementation:
 - Minimal CLI entry point
 - Environment-based runtime configuration
 - Masked credential display
+- LLM client abstraction
+- OpenAI-compatible chat completion client
 - Unit tests for configuration loading
+- Unit tests for LLM request building and response parsing
 
 ## Quick Start
 
