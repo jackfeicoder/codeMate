@@ -3,6 +3,7 @@ package com.codemate.cli;
 import com.codemate.agent.Agent;
 import com.codemate.agent.PromptLoader;
 import com.codemate.config.AppConfig;
+import com.codemate.config.AppHomeResolver;
 import com.codemate.config.EnvLoader;
 import com.codemate.config.ModelProfileStore;
 import com.codemate.llm.LlmClient;
@@ -18,8 +19,9 @@ import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] args) {
-        AppConfig config = EnvLoader.load(Path.of("."));
-        ModelProfileStore modelProfiles = ModelProfileStore.load(Path.of("."), config);
+        Path applicationHome = AppHomeResolver.resolve(Path.of("."));
+        AppConfig config = EnvLoader.load(applicationHome);
+        ModelProfileStore modelProfiles = ModelProfileStore.load(applicationHome, config);
         config = modelProfiles.activeConfig();
         Renderer renderer = new PlainRenderer(System.out);
         LlmClient llmClient = LlmClientFactory.create(config);

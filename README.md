@@ -130,6 +130,16 @@ codeMate 支持保存多个本地模型档案，并在运行时切换：
 
 DeepSeek 档案的流式请求会使用 HTTP/1.1 与 TLS 1.2 兼容配置。若出现 TLS 握手失败，请检查代理网络是否拦截了 `api.deepseek.com`，或切换到可用的本地兼容代理。
 
+## Global Command
+
+After adding the project's `bin` directory to the Windows user `PATH`, codeMate can start from any CMD or PowerShell directory:
+
+```text
+codeMate
+```
+
+The launcher passes the installation directory through `-Dcodemate.home`, so `.env` and `.codemate/models.properties` are loaded from the codeMate installation. The directory where the command is entered remains the active workspace for future project tools.
+
 终端输入使用 JLine 补全。输入 `/m` 后按 `Tab` 会列出匹配的 slash 命令；输入 `/model` 后按 `Tab` 会展开模型下拉列表，选择后会补全为切换命令；输入 `/model d` 后按 `Tab` 会按前缀展示模型档案，例如 `deepseek`。候选项可以通过 `Tab` 或方向键选择并确认。
 
 ## Roadmap
