@@ -11,6 +11,7 @@ import com.codemate.llm.LlmClientFactory;
 import com.codemate.render.InlineRenderer;
 import com.codemate.render.PlainRenderer;
 import com.codemate.render.Renderer;
+import com.codemate.tool.ToolRegistry;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.impl.DefaultParser;
@@ -31,7 +32,8 @@ public class Main {
             String systemPrompt = PromptLoader.loadSystemPrompt();
             String initialPrompt = systemPrompt + "\n\nCurrent workspace: "
                     + Path.of(".").toAbsolutePath().normalize();
-            Agent agent = new Agent(llmClient, renderer, initialPrompt);
+            Agent agent = new Agent(llmClient, renderer, initialPrompt,
+                    new ToolRegistry(Path.of(".").toAbsolutePath().normalize()), Agent.defaultMaxContextCharacters(), config.maxAgentSteps());
             CliApplication application = new CliApplication(config, renderer, agent, modelProfiles, systemPrompt);
             LineReader lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)

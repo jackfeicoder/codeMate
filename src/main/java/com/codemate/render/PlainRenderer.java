@@ -122,6 +122,16 @@ public class PlainRenderer implements Renderer {
     }
 
     @Override
+    public void toolExecuting(String name, String arguments) {
+        output.println("[tool] " + name + " " + arguments);
+    }
+
+    @Override
+    public void toolCompleted(String name, boolean error) {
+        output.println("[tool] " + name + (error ? " failed" : " completed"));
+    }
+
+    @Override
     public void assistantDelta(String delta) {
         output.print(delta);
         output.flush();

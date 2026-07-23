@@ -5,19 +5,26 @@ import com.codemate.llm.LlmException;
 import com.codemate.llm.LlmMessage;
 import com.codemate.llm.LlmResponse;
 import com.codemate.llm.StreamListener;
+import com.codemate.llm.ToolCall;
 import com.codemate.render.PlainRenderer;
+import com.codemate.tool.ToolRegistry;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentTest {
+    @TempDir
+    Path workspace;
     @Test
     void streamsAssistantResponseAndStoresHistory() {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -85,6 +92,26 @@ class AgentTest {
         assertEquals("b".repeat(600), agent.conversationHistory().get(1).content());
     }
 
+    @Test
+    void executesToolCallsAndContinuesUntilFinalAnswer() throws Exception {
+        Files.writeString(workspace.resolve("README.md"), "codeMate project");
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ToolLoopClient client = new ToolLoopClient();
+        Agent agent = new Agent(
+                client,
+                new PlainRenderer(new PrintStream(bytes, true, StandardCharsets.UTF_8)),
+                "System rules",
+                new ToolRegistry(workspace)
+        );
+
+        agent.run("Inspect the README");
+
+        assertEquals(2, client.calls);
+        assertTrue(client.toolDefinitionsSeen);
+        assertTrue(bytes.toString(StandardCharsets.UTF_8).contains("final answer"));
+        assertTrue(agent.conversationHistory().stream().anyMatch(message -> message.content().contains("codeMate project")));
+    }
+
     private static final class FakeLlmClient implements LlmClient {
         private final String response;
         private List<LlmMessage> lastMessages = List.of();
@@ -119,6 +146,32 @@ class AgentTest {
         @Override
         public LlmResponse stream(List<LlmMessage> messages, StreamListener listener) {
             throw new LlmException("upstream unavailable");
+        }
+    }
+
+    private static final class ToolLoopClient implements LlmClient {
+        private int calls;
+        private boolean toolDefinitionsSeen;
+
+        @Override
+        public LlmResponse complete(List<LlmMessage> messages) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public LlmResponse stream(List<LlmMessage> messages, StreamListener listener) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public LlmResponse stream(List<LlmMessage> messages, List<com.codemate.tool.ToolDefinition> tools, StreamListener listener) {
+            calls++;
+            toolDefinitionsSeen = tools.stream().anyMatch(tool -> tool.name().equals("read_file"));
+            if (calls == 1) {
+                return new LlmResponse("", 0, 0, List.of(new ToolCall("call-1", "read_file", "{\"path\":\"README.md\"}")));
+            }
+            listener.onContentDelta("final answer");
+            return new LlmResponse("final answer");
         }
     }
 }

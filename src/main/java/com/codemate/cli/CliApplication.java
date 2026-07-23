@@ -5,6 +5,7 @@ import com.codemate.config.AppConfig;
 import com.codemate.config.ModelProfileStore;
 import com.codemate.llm.LlmClientFactory;
 import com.codemate.render.Renderer;
+import com.codemate.tool.ToolRegistry;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.UserInterruptException;
@@ -154,7 +155,8 @@ public class CliApplication {
 
         try {
             config = modelProfiles.activate(profileName);
-            agent = new Agent(LlmClientFactory.create(config), renderer, systemPromptForWorkspace());
+            agent = new Agent(LlmClientFactory.create(config), renderer, systemPromptForWorkspace(),
+                    new ToolRegistry(workspace), Agent.defaultMaxContextCharacters(), config.maxAgentSteps());
             submittedInputs.clear();
             renderer.modelSwitched(modelProfiles.activeProfileName(), config);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -195,7 +197,8 @@ public class CliApplication {
         }
 
         workspace = candidate;
-        agent = new Agent(LlmClientFactory.create(config), renderer, systemPromptForWorkspace());
+        agent = new Agent(LlmClientFactory.create(config), renderer, systemPromptForWorkspace(),
+                new ToolRegistry(workspace), Agent.defaultMaxContextCharacters(), config.maxAgentSteps());
         submittedInputs.clear();
         renderer.workspaceChanged(workspace);
     }

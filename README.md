@@ -146,6 +146,8 @@ The default terminal experience uses the codeMate inline renderer: a Chinese wel
 
 Use `/cd <path>` to set codeMate's active workspace; this resets the current conversation so the next request is scoped to the new directory. Use `/context` to inspect message count, character usage, the `CODEMATE_CONTEXT_MAX_CHARS` budget (default `24000`), and the number of old turns automatically trimmed from the session.
 
+The ReAct runtime provides `list_dir`, `read_file`, and `grep_code` as read-only tools. Tool paths are restricted to the active workspace, and each request can execute at most `CODEMATE_MAX_AGENT_STEPS` tool rounds.
+
 终端输入使用 JLine 补全。输入 `/m` 后按 `Tab` 会列出匹配的 slash 命令；输入 `/model` 后按 `Tab` 会展开模型下拉列表，选择后会补全为切换命令；输入 `/model d` 后按 `Tab` 会按前缀展示模型档案，例如 `deepseek`。候选项可以通过 `Tab` 或方向键选择并确认。
 
 ## Roadmap

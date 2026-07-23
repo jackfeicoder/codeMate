@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.codemate.tool.ToolDefinition;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -50,6 +52,28 @@ class OpenAiCompatibleClientTest {
         JsonNode request = client.buildRequest(List.of(LlmMessage.user("hello")), true);
 
         assertEquals(true, request.path("stream").asBoolean());
+    }
+
+    @Test
+    void includesToolDefinitionsInRequest() {
+        JsonNode request = client.buildRequest(List.of(LlmMessage.user("inspect files")), List.of(
+                new ToolDefinition("list_dir", "List files", java.util.Map.of("type", "object"))
+        ), true);
+
+        assertEquals("list_dir", request.path("tools").path(0).path("function").path("name").asText());
+        assertEquals("auto", request.path("tool_choice").asText());
+    }
+
+    @Test
+    void parsesToolCallsWithoutAssistantText() {
+        LlmResponse response = client.parseResponse("""
+                {"choices":[{"message":{"role":"assistant","content":null,"tool_calls":[
+                  {"id":"call-1","type":"function","function":{"name":"read_file","arguments":"{\\\"path\\\":\\\"README.md\\\"}"}}
+                ]}}]}
+                """);
+
+        assertEquals("", response.content());
+        assertEquals("read_file", response.toolCalls().get(0).name());
     }
 
     @Test
@@ -100,6 +124,23 @@ class OpenAiCompatibleClientTest {
         assertEquals(List.of("Hello", " from", " codeMate"), deltas);
         assertEquals(3, response.inputTokens());
         assertEquals(4, response.outputTokens());
+    }
+
+    @Test
+    void parsesStreamingToolCallFragments() {
+        String sse = """
+                data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call-1","function":{"name":"read_file","arguments":"{\\\"path\\\":\\\""}}]}}]}
+
+                data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"README.md\\\"}"}}]}}]}
+
+                data: [DONE]
+
+                """;
+
+        LlmResponse response = client.parseStream(new Buffer().writeUtf8(sse), StreamListener.NO_OP);
+
+        assertEquals("read_file", response.toolCalls().get(0).name());
+        assertEquals("{\"path\":\"README.md\"}", response.toolCalls().get(0).arguments());
     }
 
     @Test

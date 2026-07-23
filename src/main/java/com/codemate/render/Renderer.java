@@ -40,6 +40,10 @@ public interface Renderer {
 
     void agentNotReady(String input);
 
+    void toolExecuting(String name, String arguments);
+
+    void toolCompleted(String name, boolean error);
+
     void assistantDelta(String delta);
 
     void assistantDone();

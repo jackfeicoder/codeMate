@@ -159,6 +159,17 @@ public final class InlineRenderer implements Renderer {
     }
 
     @Override
+    public void toolExecuting(String name, String arguments) {
+        output.println();
+        output.println(color(BLUE + BOLD, "工具调用") + " " + color(MUTED, name + " " + arguments));
+    }
+
+    @Override
+    public void toolCompleted(String name, boolean error) {
+        output.println(color(error ? RED : GREEN, error ? "工具失败：" : "工具完成：") + name);
+    }
+
+    @Override
     public void assistantDelta(String delta) {
         if (!assistantStarted) {
             assistantStarted = true;

@@ -18,7 +18,12 @@ import okio.BufferedSource;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Objects;
+import java.util.Map;
+
+import com.codemate.tool.ToolDefinition;
 
 public class OpenAiCompatibleClient implements LlmClient {
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
@@ -73,22 +78,27 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     @Override
     public LlmResponse complete(List<LlmMessage> messages) {
-        return execute(messages, false, StreamListener.NO_OP);
+        return execute(messages, List.of(), false, StreamListener.NO_OP);
     }
 
     @Override
     public LlmResponse stream(List<LlmMessage> messages, StreamListener listener) {
-        return execute(messages, true, listener == null ? StreamListener.NO_OP : listener);
+        return execute(messages, List.of(), true, listener == null ? StreamListener.NO_OP : listener);
     }
 
-    private LlmResponse execute(List<LlmMessage> messages, boolean stream, StreamListener listener) {
+    @Override
+    public LlmResponse stream(List<LlmMessage> messages, List<ToolDefinition> tools, StreamListener listener) {
+        return execute(messages, tools, true, listener == null ? StreamListener.NO_OP : listener);
+    }
+
+    private LlmResponse execute(List<LlmMessage> messages, List<ToolDefinition> tools, boolean stream, StreamListener listener) {
         if (apiKey.isBlank()) {
             throw new LlmException("Missing CODEMATE_API_KEY");
         }
 
         String requestJson;
         try {
-            requestJson = objectMapper.writeValueAsString(buildRequest(messages, stream));
+            requestJson = objectMapper.writeValueAsString(buildRequest(messages, tools, stream));
         } catch (IOException e) {
             throw new LlmException("Failed to serialize LLM request", e);
         }
@@ -113,7 +123,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                 return parseStream(body.source(), listener);
             }
             String responseText = body.string();
-            return new LlmResponse(parseContent(responseText));
+            return parseResponse(responseText);
         } catch (IOException e) {
             String detail = e.getMessage();
             throw new LlmException("LLM request failed" + (detail == null || detail.isBlank() ? "" : ": " + detail), e);
@@ -125,6 +135,10 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     ObjectNode buildRequest(List<LlmMessage> messages, boolean stream) {
+        return buildRequest(messages, List.of(), stream);
+    }
+
+    ObjectNode buildRequest(List<LlmMessage> messages, List<ToolDefinition> tools, boolean stream) {
         if (messages == null || messages.isEmpty()) {
             throw new IllegalArgumentException("messages must not be empty");
         }
@@ -140,12 +154,26 @@ public class OpenAiCompatibleClient implements LlmClient {
             messageNode.put("content", message.content());
         }
 
+        if (tools != null && !tools.isEmpty()) {
+            ArrayNode toolNodes = root.putArray("tools");
+            for (ToolDefinition tool : tools) {
+                ObjectNode toolNode = toolNodes.addObject();
+                toolNode.put("type", "function");
+                ObjectNode function = toolNode.putObject("function");
+                function.put("name", tool.name());
+                function.put("description", tool.description());
+                function.set("parameters", objectMapper.valueToTree(tool.parameters()));
+            }
+            root.put("tool_choice", "auto");
+        }
+
         return root;
     }
 
     LlmResponse parseStream(BufferedSource source, StreamListener listener) {
         StreamListener streamListener = listener == null ? StreamListener.NO_OP : listener;
         StringBuilder content = new StringBuilder();
+        Map<Integer, ToolCallAccumulator> toolCalls = new LinkedHashMap<>();
         int inputTokens = 0;
         int outputTokens = 0;
 
@@ -186,25 +214,64 @@ public class OpenAiCompatibleClient implements LlmClient {
                     content.append(delta);
                     streamListener.onContentDelta(delta);
                 }
+
+                for (JsonNode toolCall : root.path("choices").path(0).path("delta").path("tool_calls")) {
+                    int index = toolCall.path("index").asInt(toolCalls.size());
+                    ToolCallAccumulator accumulator = toolCalls.computeIfAbsent(index, ignored -> new ToolCallAccumulator());
+                    accumulator.id = textIfPresent(toolCall, "id", accumulator.id);
+                    accumulator.name = textIfPresent(toolCall.path("function"), "name", accumulator.name);
+                    accumulator.arguments.append(toolCall.path("function").path("arguments").asText(""));
+                }
             }
         } catch (IOException e) {
             throw new LlmException("Failed to parse LLM stream", e);
         }
 
-        return new LlmResponse(content.toString(), inputTokens, outputTokens);
+        return new LlmResponse(content.toString(), inputTokens, outputTokens, toToolCalls(toolCalls));
     }
 
     String parseContent(String responseText) {
+        return parseResponse(responseText).content();
+    }
+
+    LlmResponse parseResponse(String responseText) {
         try {
             JsonNode root = objectMapper.readTree(responseText);
-            JsonNode content = root.path("choices").path(0).path("message").path("content");
-            if (content.isMissingNode() || content.isNull()) {
-                throw new LlmException("LLM response did not contain choices[0].message.content");
+            JsonNode message = root.path("choices").path(0).path("message");
+            if (message.isMissingNode()) {
+                throw new LlmException("LLM response did not contain choices[0].message");
             }
-            return content.asText();
+            List<ToolCall> toolCalls = new ArrayList<>();
+            for (JsonNode toolCall : message.path("tool_calls")) {
+                toolCalls.add(new ToolCall(
+                        toolCall.path("id").asText(""),
+                        toolCall.path("function").path("name").asText(""),
+                        toolCall.path("function").path("arguments").asText("{}")
+                ));
+            }
+            JsonNode content = message.path("content");
+            return new LlmResponse(content.isMissingNode() || content.isNull() ? "" : content.asText(), 0, 0, toolCalls);
         } catch (IOException e) {
             throw new LlmException("Failed to parse LLM response", e);
         }
+    }
+
+    private static List<ToolCall> toToolCalls(Map<Integer, ToolCallAccumulator> values) {
+        return values.values().stream()
+                .filter(value -> value.name != null && !value.name.isBlank())
+                .map(value -> new ToolCall(value.id, value.name, value.arguments.toString()))
+                .toList();
+    }
+
+    private static String textIfPresent(JsonNode node, String field, String fallback) {
+        JsonNode value = node.path(field);
+        return value.isMissingNode() || value.isNull() ? fallback : value.asText(fallback);
+    }
+
+    private static final class ToolCallAccumulator {
+        private String id = "";
+        private String name = "";
+        private final StringBuilder arguments = new StringBuilder();
     }
 
     private String chatCompletionsUrl() {
