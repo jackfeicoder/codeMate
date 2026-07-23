@@ -117,7 +117,7 @@ public class CliApplication {
     private void handleModel(String payload) {
         String argument = payload == null ? "" : payload.trim();
         if (argument.isEmpty()) {
-            renderer.modelStatus(modelProfiles.activeProfileName(), config);
+            renderer.modelProfiles(modelProfiles.activeProfileName(), modelProfiles.profiles());
             return;
         }
         if (argument.equalsIgnoreCase("list")) {

@@ -38,6 +38,14 @@ class CodeMateCompleterTest {
     }
 
     @Test
+    void completesBareModelCommandIntoASelectionCommand() {
+        List<String> values = complete("/model");
+
+        assertTrue(values.contains("/model deepseek"));
+        assertTrue(values.contains("/model ccswitch"));
+    }
+
+    @Test
     void completesModelProfileAfterUseSubcommand() {
         List<String> values = complete("/model use c");
 

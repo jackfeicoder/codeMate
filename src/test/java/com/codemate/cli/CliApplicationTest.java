@@ -60,13 +60,14 @@ class CliApplicationTest {
     }
 
     @Test
-    void modelCommandShowsCurrentProfile() {
+    void modelCommandListsSelectableProfiles() {
         TestCli testCli = newTestCli();
 
         boolean shouldContinue = testCli.app().handleLine("/model");
 
         assertTrue(shouldContinue);
-        assertTrue(testCli.output().contains("Active model profile: default"));
+        assertTrue(testCli.output().contains("Model profiles:"));
+        assertTrue(testCli.output().contains("* default"));
     }
 
     private static TestCli newTestCli() {

@@ -51,6 +51,15 @@ final class CodeMateCompleter implements Completer {
     }
 
     private void completeModel(String input, List<Candidate> candidates) {
+        if (input.equalsIgnoreCase("/model")) {
+            for (ModelProfile profile : modelProfiles.profiles()) {
+                String value = "/model " + profile.name();
+                String description = profile.config().provider() + " / " + profile.config().model();
+                candidates.add(candidate(value, "Model profile", description, true));
+            }
+            return;
+        }
+
         String payload = input.length() == 6 ? "" : input.substring(7);
         String trimmed = payload.trim();
         if (trimmed.regionMatches(true, 0, "use ", 0, 4)) {

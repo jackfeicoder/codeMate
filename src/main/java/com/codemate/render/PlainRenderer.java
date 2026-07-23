@@ -58,6 +58,7 @@ public class PlainRenderer implements Renderer {
             output.println(marker + " " + profile.name() + "  " + profile.config().provider()
                     + " / " + profile.config().model());
         }
+        output.println("Use /model <name> to switch. Press Tab after /model to choose interactively.");
     }
 
     @Override
