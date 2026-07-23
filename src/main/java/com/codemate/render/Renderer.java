@@ -1,5 +1,6 @@
 package com.codemate.render;
 
+import com.codemate.agent.ContextStats;
 import com.codemate.config.AppConfig;
 import com.codemate.config.ModelProfile;
 
@@ -22,6 +23,10 @@ public interface Renderer {
     void modelSwitched(String profileName, AppConfig config);
 
     void modelConfigPath(Path path);
+
+    void workspaceChanged(Path workspace);
+
+    void contextStatus(ContextStats stats);
 
     void prompt();
 

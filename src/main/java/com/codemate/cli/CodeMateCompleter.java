@@ -14,6 +14,8 @@ final class CodeMateCompleter implements Completer {
     private static final List<CommandOption> COMMANDS = List.of(
             new CommandOption("/help", "Show available commands"),
             new CommandOption("/model", "Show, list, or switch model profiles"),
+            new CommandOption("/cd", "Show or switch the active workspace"),
+            new CommandOption("/context", "Show current conversation context usage"),
             new CommandOption("/clear", "Clear current session state"),
             new CommandOption("/exit", "Exit codeMate"),
             new CommandOption("/quit", "Exit codeMate")

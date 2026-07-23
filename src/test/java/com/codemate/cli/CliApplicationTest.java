@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -68,6 +69,18 @@ class CliApplicationTest {
         assertTrue(shouldContinue);
         assertTrue(testCli.output().contains("Model profiles:"));
         assertTrue(testCli.output().contains("* default"));
+    }
+
+    @Test
+    void workspaceAndContextCommandsExposeRealSessionState() {
+        TestCli testCli = newTestCli();
+
+        testCli.app().handleLine("/cd .");
+        testCli.app().handleLine("/context");
+
+        assertEquals(Path.of(".").toAbsolutePath().normalize(), testCli.app().workspace());
+        assertTrue(testCli.output().contains("Workspace switched to:"));
+        assertTrue(testCli.output().contains("Context:"));
     }
 
     private static TestCli newTestCli() {

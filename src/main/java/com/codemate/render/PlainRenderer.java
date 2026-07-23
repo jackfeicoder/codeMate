@@ -1,9 +1,11 @@
 package com.codemate.render;
 
+import com.codemate.agent.ContextStats;
 import com.codemate.config.AppConfig;
 import com.codemate.config.ModelProfile;
 
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,6 +39,8 @@ public class PlainRenderer implements Renderer {
         output.println("  /model list  List available model profiles");
         output.println("  /model use <name>  Switch model profile");
         output.println("  /model init  Create a local model profile template");
+        output.println("  /cd [path]  Show or switch the active workspace");
+        output.println("  /context  Show conversation context usage");
         output.println("  /clear  Clear current session state");
         output.println("  /exit   Exit codeMate");
         output.println("  /quit   Exit codeMate");
@@ -71,6 +75,17 @@ public class PlainRenderer implements Renderer {
     public void modelConfigPath(java.nio.file.Path path) {
         output.println("Model profile template created: " + path);
         output.println("Fill in profile API keys locally, then use /model list and /model use <name>.");
+    }
+
+    @Override
+    public void workspaceChanged(Path workspace) {
+        output.println("Workspace switched to: " + workspace);
+    }
+
+    @Override
+    public void contextStatus(ContextStats stats) {
+        output.printf("Context: %d messages, %d/%d characters (%d%%), trimmed turns: %d%n",
+                stats.messageCount(), stats.characters(), stats.maxCharacters(), stats.usagePercent(), stats.trimmedTurns());
     }
 
     @Override

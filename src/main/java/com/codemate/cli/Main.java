@@ -13,6 +13,7 @@ import com.codemate.render.PlainRenderer;
 import com.codemate.render.Renderer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
@@ -28,10 +29,13 @@ public class Main {
             Renderer renderer = createRenderer();
             LlmClient llmClient = LlmClientFactory.create(config);
             String systemPrompt = PromptLoader.loadSystemPrompt();
-            Agent agent = new Agent(llmClient, renderer, systemPrompt);
+            String initialPrompt = systemPrompt + "\n\nCurrent workspace: "
+                    + Path.of(".").toAbsolutePath().normalize();
+            Agent agent = new Agent(llmClient, renderer, initialPrompt);
             CliApplication application = new CliApplication(config, renderer, agent, modelProfiles, systemPrompt);
             LineReader lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
+                    .parser(new DefaultParser().escapeChars(null))
                     .completer(new CodeMateCompleter(modelProfiles))
                     .build();
             lineReader.option(LineReader.Option.AUTO_LIST, true);

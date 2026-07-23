@@ -1,5 +1,6 @@
 package com.codemate.render;
 
+import com.codemate.agent.ContextStats;
 import com.codemate.config.AppConfig;
 import com.codemate.config.ModelProfile;
 
@@ -25,6 +26,7 @@ public final class InlineRenderer implements Renderer {
     private final PrintStream output;
     private boolean assistantStarted;
     private String activeModel = "";
+    private Path workspace = Path.of(".").toAbsolutePath().normalize();
 
     public InlineRenderer(PrintStream output) {
         this.output = Objects.requireNonNull(output, "output");
@@ -66,6 +68,8 @@ public final class InlineRenderer implements Renderer {
         output.println("  /model                 展示并选择模型");
         output.println("  /model <模型名>        切换模型");
         output.println("  /model init            创建本地模型档案模板");
+        output.println("  /cd [目录]             查看或切换工作目录");
+        output.println("  /context               查看会话上下文用量");
         output.println("  /clear                 清空当前会话");
         output.println("  /help                  查看命令");
         output.println("  /exit                  退出 codeMate");
@@ -103,6 +107,23 @@ public final class InlineRenderer implements Renderer {
     public void modelConfigPath(Path path) {
         output.println(color(GREEN, "已创建本地模型档案：") + path);
         output.println(color(MUTED, "填写 Key 后使用 /model 选择。"));
+    }
+
+    @Override
+    public void workspaceChanged(Path workspace) {
+        this.workspace = workspace.toAbsolutePath().normalize();
+        output.println(color(GREEN, "工作目录已切换：") + this.workspace);
+        statusLine("空闲");
+    }
+
+    @Override
+    public void contextStatus(ContextStats stats) {
+        output.println(color(BLUE + BOLD, "当前上下文"));
+        output.println("  消息: " + stats.messageCount() + " 条");
+        output.println("  用量: " + stats.characters() + " / " + stats.maxCharacters()
+                + " 字符 (" + stats.usagePercent() + "%)");
+        output.println("  已裁剪: " + stats.trimmedTurns() + " 轮旧对话");
+        statusLine("空闲");
     }
 
     @Override
@@ -176,7 +197,7 @@ public final class InlineRenderer implements Renderer {
     private void statusLine(String phase) {
         divider();
         output.println(color(MUTED, "  codeMate") + "  " + color(BLUE, activeModel) + "  "
-                + color(GREEN, phase) + "  " + color(MUTED, Path.of(".").toAbsolutePath().normalize().toString()));
+                + color(GREEN, phase) + "  " + color(MUTED, workspace.toString()));
     }
 
     private static String color(String style, String text) {

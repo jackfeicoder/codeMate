@@ -42,6 +42,13 @@ class CliCommandParserTest {
     }
 
     @Test
+    void parsesWorkspaceAndContextCommands() {
+        assertEquals(CommandType.CD, CliCommandParser.parse("/cd").type());
+        assertEquals("projects/demo", CliCommandParser.parse("/cd projects/demo").payload());
+        assertEquals(CommandType.CONTEXT, CliCommandParser.parse("/context").type());
+    }
+
+    @Test
     void slashCommandUnknownWhenNotRegistered() {
         ParsedCommand command = CliCommandParser.parse("/unknown");
 

@@ -68,6 +68,23 @@ class AgentTest {
         assertEquals(2, agent.conversationHistory().size());
     }
 
+    @Test
+    void trimsOldestCompletedTurnsWhenContextBudgetIsExceeded() {
+        Agent agent = new Agent(
+                new FakeLlmClient("response-text"),
+                new PlainRenderer(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8)),
+                "system prompt",
+                1_000
+        );
+
+        agent.run("a".repeat(600));
+        agent.run("b".repeat(600));
+
+        assertEquals(1, agent.contextStats().trimmedTurns());
+        assertEquals(3, agent.conversationHistory().size());
+        assertEquals("b".repeat(600), agent.conversationHistory().get(1).content());
+    }
+
     private static final class FakeLlmClient implements LlmClient {
         private final String response;
         private List<LlmMessage> lastMessages = List.of();

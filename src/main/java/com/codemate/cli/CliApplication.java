@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +26,7 @@ public class CliApplication {
     private final ModelProfileStore modelProfiles;
     private final String systemPrompt;
     private final List<String> submittedInputs = new ArrayList<>();
+    private Path workspace = Path.of(".").toAbsolutePath().normalize();
 
     public CliApplication(AppConfig config, Renderer renderer, Agent agent) {
         this(config, renderer, agent, ModelProfileStore.inMemory(config), "You are codeMate.");
@@ -97,6 +100,14 @@ public class CliApplication {
                 handleModel(command.payload());
                 yield true;
             }
+            case CD -> {
+                handleWorkspace(command.payload());
+                yield true;
+            }
+            case CONTEXT -> {
+                renderer.contextStatus(agent.contextStats());
+                yield true;
+            }
             case CLEAR -> {
                 submittedInputs.clear();
                 agent.reset();
@@ -143,7 +154,7 @@ public class CliApplication {
 
         try {
             config = modelProfiles.activate(profileName);
-            agent = new Agent(LlmClientFactory.create(config), renderer, systemPrompt);
+            agent = new Agent(LlmClientFactory.create(config), renderer, systemPromptForWorkspace());
             submittedInputs.clear();
             renderer.modelSwitched(modelProfiles.activeProfileName(), config);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -155,9 +166,42 @@ public class CliApplication {
         return submittedInputs.size();
     }
 
+    Path workspace() {
+        return workspace;
+    }
+
     private void showStartup() {
         renderer.startup(config);
         renderer.helpHint();
+    }
+
+    private void handleWorkspace(String payload) {
+        String requested = payload == null ? "" : payload.trim();
+        if (requested.isEmpty()) {
+            renderer.workspaceChanged(workspace);
+            return;
+        }
+        if (requested.length() > 1 && requested.startsWith("\"") && requested.endsWith("\"")) {
+            requested = requested.substring(1, requested.length() - 1);
+        }
+        Path candidate = Path.of(requested);
+        if (!candidate.isAbsolute()) {
+            candidate = workspace.resolve(candidate);
+        }
+        candidate = candidate.normalize().toAbsolutePath();
+        if (!Files.isDirectory(candidate)) {
+            renderer.error("目录不存在或不可访问：" + candidate);
+            return;
+        }
+
+        workspace = candidate;
+        agent = new Agent(LlmClientFactory.create(config), renderer, systemPromptForWorkspace());
+        submittedInputs.clear();
+        renderer.workspaceChanged(workspace);
+    }
+
+    private String systemPromptForWorkspace() {
+        return systemPrompt + "\n\nCurrent workspace: " + workspace;
     }
 
     private boolean handleNormalInput(String input) {
