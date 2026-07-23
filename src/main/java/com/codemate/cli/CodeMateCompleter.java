@@ -53,8 +53,8 @@ final class CodeMateCompleter implements Completer {
     private void completeModel(String input, List<Candidate> candidates) {
         if (input.equalsIgnoreCase("/model")) {
             for (ModelProfile profile : modelProfiles.profiles()) {
-                String value = "/model " + profile.name();
-                String description = profile.config().provider() + " / " + profile.config().model();
+                String value = "/model " + profile.config().model();
+                String description = profile.name() + " / " + profile.config().provider();
                 candidates.add(candidate(value, "Model profile", description, true));
             }
             return;
@@ -85,9 +85,10 @@ final class CodeMateCompleter implements Completer {
 
     private void completeProfiles(String prefix, List<Candidate> candidates) {
         for (ModelProfile profile : modelProfiles.profiles()) {
-            if (matches(profile.name(), prefix)) {
-                String description = profile.config().provider() + " / " + profile.config().model();
-                candidates.add(candidate(profile.name(), "Model profile", description, true));
+            String model = profile.config().model();
+            if (matches(model, prefix)) {
+                String description = profile.name() + " / " + profile.config().provider();
+                candidates.add(candidate(model, "Model profile", description, true));
             }
         }
     }

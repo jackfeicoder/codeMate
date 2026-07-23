@@ -33,24 +33,24 @@ class CodeMateCompleterTest {
     void completesDirectModelProfileByPrefix() {
         List<String> values = complete("/model d");
 
-        assertTrue(values.contains("deepseek"));
-        assertFalse(values.contains("ccswitch"));
+        assertTrue(values.contains("deepseek-v4-flash"));
+        assertFalse(values.contains("grok-4.5"));
     }
 
     @Test
     void completesBareModelCommandIntoASelectionCommand() {
         List<String> values = complete("/model");
 
-        assertTrue(values.contains("/model deepseek"));
-        assertTrue(values.contains("/model ccswitch"));
+        assertTrue(values.contains("/model deepseek-v4-flash"));
+        assertTrue(values.contains("/model grok-4.5"));
     }
 
     @Test
     void completesModelProfileAfterUseSubcommand() {
-        List<String> values = complete("/model use c");
+        List<String> values = complete("/model use g");
 
-        assertTrue(values.contains("ccswitch"));
-        assertFalse(values.contains("deepseek"));
+        assertTrue(values.contains("grok-4.5"));
+        assertFalse(values.contains("deepseek-v4-flash"));
     }
 
     private List<String> complete(String input) {

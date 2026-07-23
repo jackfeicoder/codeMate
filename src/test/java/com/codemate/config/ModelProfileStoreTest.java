@@ -41,6 +41,23 @@ class ModelProfileStoreTest {
     }
 
     @Test
+    void activatesProfileByModelName() throws IOException {
+        Path configDir = tempDir.resolve(".codemate");
+        Files.createDirectories(configDir);
+        Files.writeString(configDir.resolve("models.properties"), """
+                active=deepseek
+                profile.deepseek.provider=deepseek
+                profile.deepseek.model=deepseek-v4-flash
+                profile.deepseek.base-url=https://api.deepseek.com
+                """);
+
+        ModelProfileStore store = ModelProfileStore.load(tempDir, fallback());
+
+        assertEquals("deepseek-v4-flash", store.activate("deepseek-v4-flash").model());
+        assertEquals("deepseek", store.activeProfileName());
+    }
+
+    @Test
     void fallsBackToDefaultProfileWhenNoLocalFileExists() {
         ModelProfileStore store = ModelProfileStore.load(tempDir, fallback());
 

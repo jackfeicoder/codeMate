@@ -75,13 +75,30 @@ public final class ModelProfileStore {
     }
 
     public AppConfig activate(String requestedName) {
-        ModelProfile profile = profiles.get(requestedName);
+        ModelProfile profile = findProfile(requestedName);
         if (profile == null) {
-            throw new IllegalArgumentException("Unknown model profile: " + requestedName + ". Run /model list first.");
+            throw new IllegalArgumentException("Unknown model or profile: " + requestedName + ". Run /model list first.");
         }
         activeProfileName = profile.name();
         persistActiveProfile();
         return profile.config();
+    }
+
+    private ModelProfile findProfile(String requestedName) {
+        ModelProfile namedProfile = profiles.get(requestedName);
+        if (namedProfile != null) {
+            return namedProfile;
+        }
+
+        List<ModelProfile> matchingModels = profiles.values().stream()
+                .filter(profile -> profile.config().model().equalsIgnoreCase(requestedName))
+                .toList();
+        if (matchingModels.size() > 1) {
+            throw new IllegalArgumentException(
+                    "Model name matches multiple profiles: " + requestedName + ". Use the profile name instead."
+            );
+        }
+        return matchingModels.isEmpty() ? null : matchingModels.get(0);
     }
 
     public Path initializeTemplate() {
