@@ -140,6 +140,10 @@ codeMate
 
 The launcher passes the installation directory through `-Dcodemate.home`, so `.env` and `.codemate/models.properties` are loaded from the codeMate installation. The directory where the command is entered remains the active workspace for future project tools.
 
+## Terminal Interface
+
+The default terminal experience uses the codeMate inline renderer: a Chinese welcome screen, custom `<>` terminal companion, teal and blue status hierarchy, Tab command completion, and grouped streaming replies. Set `CODEMATE_RENDERER=plain` to use the concise plain-text renderer when needed.
+
 终端输入使用 JLine 补全。输入 `/m` 后按 `Tab` 会列出匹配的 slash 命令；输入 `/model` 后按 `Tab` 会展开模型下拉列表，选择后会补全为切换命令；输入 `/model d` 后按 `Tab` 会按前缀展示模型档案，例如 `deepseek`。候选项可以通过 `Tab` 或方向键选择并确认。
 
 ## Roadmap

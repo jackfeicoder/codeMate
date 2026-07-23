@@ -8,6 +8,7 @@ import com.codemate.config.EnvLoader;
 import com.codemate.config.ModelProfileStore;
 import com.codemate.llm.LlmClient;
 import com.codemate.llm.LlmClientFactory;
+import com.codemate.render.InlineRenderer;
 import com.codemate.render.PlainRenderer;
 import com.codemate.render.Renderer;
 import org.jline.reader.LineReader;
@@ -23,12 +24,12 @@ public class Main {
         AppConfig config = EnvLoader.load(applicationHome);
         ModelProfileStore modelProfiles = ModelProfileStore.load(applicationHome, config);
         config = modelProfiles.activeConfig();
-        Renderer renderer = new PlainRenderer(System.out);
-        LlmClient llmClient = LlmClientFactory.create(config);
-        String systemPrompt = PromptLoader.loadSystemPrompt();
-        Agent agent = new Agent(llmClient, renderer, systemPrompt);
-        CliApplication application = new CliApplication(config, renderer, agent, modelProfiles, systemPrompt);
         try (Terminal terminal = TerminalBuilder.builder().system(true).build()) {
+            Renderer renderer = createRenderer();
+            LlmClient llmClient = LlmClientFactory.create(config);
+            String systemPrompt = PromptLoader.loadSystemPrompt();
+            Agent agent = new Agent(llmClient, renderer, systemPrompt);
+            CliApplication application = new CliApplication(config, renderer, agent, modelProfiles, systemPrompt);
             LineReader lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .completer(new CodeMateCompleter(modelProfiles))
@@ -40,5 +41,12 @@ public class Main {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to initialize interactive terminal", e);
         }
+    }
+
+    private static Renderer createRenderer() {
+        if ("plain".equalsIgnoreCase(System.getenv("CODEMATE_RENDERER"))) {
+            return new PlainRenderer(System.out);
+        }
+        return new InlineRenderer(System.out);
     }
 }

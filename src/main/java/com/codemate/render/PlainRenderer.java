@@ -80,6 +80,11 @@ public class PlainRenderer implements Renderer {
     }
 
     @Override
+    public String inputPrompt() {
+        return "> ";
+    }
+
+    @Override
     public void sessionCleared() {
         output.println("Session state cleared.");
     }

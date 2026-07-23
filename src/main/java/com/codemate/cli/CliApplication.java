@@ -71,7 +71,7 @@ public class CliApplication {
 
         while (true) {
             try {
-                String line = lineReader.readLine("> ");
+                String line = lineReader.readLine(renderer.inputPrompt());
                 if (!handleLine(line)) {
                     return;
                 }

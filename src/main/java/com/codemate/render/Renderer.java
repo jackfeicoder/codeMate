@@ -25,6 +25,8 @@ public interface Renderer {
 
     void prompt();
 
+    String inputPrompt();
+
     void sessionCleared();
 
     void goodbye();
