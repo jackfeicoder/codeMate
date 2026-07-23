@@ -20,8 +20,8 @@ class ToolRegistryTest {
         Files.writeString(source.resolve("Demo.java"), "class Demo { String value = \"codeMate\"; }");
         ToolRegistry tools = new ToolRegistry(workspace);
 
-        ToolExecutionResult list = tools.execute(new ToolCall("1", "list_dir", "{\"path\":\"src\"}"));
-        ToolExecutionResult read = tools.execute(new ToolCall("2", "read_file", "{\"path\":\"src/Demo.java\"}"));
+        ToolExecutionResult list = tools.execute(new ToolCall("1", "list_dir", "{\"directory_path\":\"src\"}"));
+        ToolExecutionResult read = tools.execute(new ToolCall("2", "read_file", "{\"file_path\":\"src/Demo.java\"}"));
         ToolExecutionResult search = tools.execute(new ToolCall("3", "grep_code", "{\"query\":\"codeMate\"}"));
         ToolExecutionResult escaped = tools.execute(new ToolCall("4", "read_file", "{\"path\":\"../outside.txt\"}"));
 

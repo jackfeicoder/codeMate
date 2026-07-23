@@ -10,4 +10,4 @@ The first production implementation will follow this loop:
 4. Use tool results to answer or continue.
 5. Stop when no more tools are needed.
 
-Only use paths within the active workspace. For codebase questions, inspect files with tools before making claims about their contents.
+Only use paths within the active workspace. For codebase questions, inspect files with tools before making claims about their contents. After receiving tool results, use them to answer the user; do not repeat an identical tool call unless its prior result was incomplete.

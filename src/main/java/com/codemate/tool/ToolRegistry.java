@@ -30,10 +30,10 @@ public final class ToolRegistry {
         this.workspace = workspace.toAbsolutePath().normalize();
         this.pathGuard = new PathGuard(this.workspace);
         this.definitions = List.of(
-                definition("list_dir", "List files and directories under a path in the active workspace.",
-                        Map.of("path", Map.of("type", "string", "description", "Relative directory path. Defaults to the workspace root."))),
+                definition("list_dir", "List files and directories under a directory in the active workspace.",
+                        Map.of("directory_path", Map.of("type", "string", "description", "Relative directory path. Defaults to the workspace root."))),
                 definition("read_file", "Read a UTF-8 text file from the active workspace.",
-                        Map.of("path", Map.of("type", "string", "description", "Relative file path.")), List.of("path")),
+                        Map.of("file_path", Map.of("type", "string", "description", "Relative file path.")), List.of("file_path")),
                 definition("grep_code", "Search UTF-8 text files for a literal query in the active workspace.",
                         Map.of(
                                 "query", Map.of("type", "string", "description", "Literal text to find."),
@@ -53,10 +53,12 @@ public final class ToolRegistry {
         try {
             Map<String, Object> arguments = OBJECT_MAPPER.readValue(call.arguments(), new TypeReference<>() { });
             return switch (call.name()) {
-                case "list_dir" -> new ToolExecutionResult(call.name(), listDirectory(stringValue(arguments, "path")), false);
-                case "read_file" -> new ToolExecutionResult(call.name(), readFile(stringValue(arguments, "path")), false);
+                case "list_dir" -> new ToolExecutionResult(call.name(), listDirectory(firstString(arguments,
+                        "directory_path", "path", "file_path")), false);
+                case "read_file" -> new ToolExecutionResult(call.name(), readFile(firstString(arguments,
+                        "file_path", "path")), false);
                 case "grep_code" -> new ToolExecutionResult(call.name(), grepCode(
-                        requiredString(arguments, "query"), stringValue(arguments, "path")), false);
+                        requiredString(arguments, "query"), firstString(arguments, "path", "directory_path", "file_path")), false);
                 default -> new ToolExecutionResult(call.name(), "Unknown tool: " + call.name(), true);
             };
         } catch (Exception e) {
@@ -142,6 +144,16 @@ public final class ToolRegistry {
     private static String stringValue(Map<String, Object> values, String key) {
         Object value = values.get(key);
         return value == null ? "" : value.toString();
+    }
+
+    private static String firstString(Map<String, Object> values, String... keys) {
+        for (String key : keys) {
+            String value = stringValue(values, key);
+            if (!value.isBlank()) {
+                return value;
+            }
+        }
+        return "";
     }
 
     private static String requiredText(String value, String name) {
