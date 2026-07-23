@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.MediaType;
+import okhttp3.ConnectionSpec;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.Protocol;
+import okhttp3.TlsVersion;
 import okio.BufferedSource;
 
 import java.io.IOException;
@@ -27,16 +30,31 @@ public class OpenAiCompatibleClient implements LlmClient {
     private final String model;
 
     public OpenAiCompatibleClient(String baseUrl, String apiKey, String model) {
+        this(baseUrl, apiKey, model, false);
+    }
+
+    public OpenAiCompatibleClient(String baseUrl, String apiKey, String model, boolean forceHttp11) {
         this(
-                new OkHttpClient.Builder()
-                        .connectTimeout(Duration.ofSeconds(20))
-                        .readTimeout(Duration.ofSeconds(120))
-                        .build(),
+                createHttpClient(forceHttp11),
                 new ObjectMapper(),
                 baseUrl,
                 apiKey,
                 model
         );
+    }
+
+    static OkHttpClient createHttpClient(boolean forceHttp11) {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .connectTimeout(Duration.ofSeconds(20))
+                .readTimeout(Duration.ofSeconds(120));
+        if (forceHttp11) {
+            builder.protocols(List.of(Protocol.HTTP_1_1));
+            ConnectionSpec tls12 = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                    .tlsVersions(TlsVersion.TLS_1_2)
+                    .build();
+            builder.connectionSpecs(List.of(tls12));
+        }
+        return builder.build();
     }
 
     OpenAiCompatibleClient(
@@ -97,7 +115,8 @@ public class OpenAiCompatibleClient implements LlmClient {
             String responseText = body.string();
             return new LlmResponse(parseContent(responseText));
         } catch (IOException e) {
-            throw new LlmException("LLM request failed", e);
+            String detail = e.getMessage();
+            throw new LlmException("LLM request failed" + (detail == null || detail.isBlank() ? "" : ": " + detail), e);
         }
     }
 

@@ -3,6 +3,8 @@ package com.codemate.llm;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.TlsVersion;
 import okio.Buffer;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +22,14 @@ class OpenAiCompatibleClientTest {
             "test-credential",
             "example-model"
     );
+
+    @Test
+    void createsHttp11OnlyClientWhenRequested() {
+        OkHttpClient http11Client = OpenAiCompatibleClient.createHttpClient(true);
+
+        assertEquals(List.of(Protocol.HTTP_1_1), http11Client.protocols());
+        assertEquals(List.of(TlsVersion.TLS_1_2), http11Client.connectionSpecs().get(0).tlsVersions());
+    }
 
     @Test
     void buildsChatCompletionRequest() {

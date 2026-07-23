@@ -7,6 +7,7 @@ public final class LlmClientFactory {
     }
 
     public static LlmClient create(AppConfig config) {
-        return new OpenAiCompatibleClient(config.baseUrl(), config.apiKey(), config.model());
+        boolean forceHttp11 = "deepseek".equalsIgnoreCase(config.provider());
+        return new OpenAiCompatibleClient(config.baseUrl(), config.apiKey(), config.model(), forceHttp11);
     }
 }
